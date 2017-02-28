@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.teamup.mapper.BoardMapper">
+
+  <select id="readBoard" resultType="org.teamup.domain.BoardVO">
+  select boardId, member.name as name,categoryId, board.memberId as memberId, title, date, memCount, dueDate, content, curCount, url from board, member 
+  where boardId=${value} and member.memberId = board.memberId
+  </select>
+
+  
+  
+  <select id="listCategory" resultType="org.teamup.domain.BoardVO">
+    <![CDATA[
+    select boardId, member.name as name, title, date, memCount, dueDate, content, curCount, url from board, member 
+    where boardId > 0 and categoryId = #{categoryId} and member.memberId = board.memberId
+    order by boardId desc, date desc
+    ]]>
+    </select>
+    
+   <select id="findByMemId" resultType="org.teamup.domain.BoardVO">
+   <![CDATA[
+    select boardId, member.name as name, title, date, memCount, dueDate, content, curCount, url from board, member 
+    where member.memberId = board.memberId and board.memberId = #{memberId}
+    order by boardId desc, date desc
+    ]]>
+    </select>
+    
+    <update id="participate" >
+    update board set curCount=curCount+1
+    where boardId=#{value}
+    </update>
+    
+    <update id="participate_out" >
+    update board set curCount=curCount-1
+    where boardId=#{value}
+    </update>
+    
+  <insert id="insertBoard" >
+  insert into board ( title, categoryId, content, memberId, url, memCount, dueDate, date) values
+  ( #{title}, #{categoryId},#{content}, #{memberId}, #{url}, #{memCount},  #{dueDate}, #{date})
+  </insert>
+
+  <update id="updateBoard"> 
+  update board set title=#{title},content=#{content}, dueDate =#{dueDate}, url=#{url},categoryId = #{categoryId}, memCount=#{memCount},curCount=#{curCount}
+  where boardId=#{boardId}
+  </update>
+  
+
+  <delete id="deleteBoard">
+  delete from board
+  where boardId=#{boardId} 
+  </delete>
+  
+	<select id="listAll" resultType="org.teamup.domain.BoardVO">
+	<![CDATA[
+	select title, date, memCount, dueDate, content, curCount, url from board
+	where boardId > 0 order by boardId desc, date desc
+	]]>
+	</select>
+	
+	<select id="listPage" resultType="org.teamup.domain.BoardVO">
+	<![CDATA[
+	select title, date, memCount, dueDate, content, curCount, url from board
+	where boardId > 0 order by boardId desc, date desc
+	limit #{page}, 10 ]]>
+	</select>
+	
+	<select id="listCriteria" resultType="org.teamup.domain.BoardVO">
+	<![CDATA[
+	select boardId, member.name as name,categoryId, board.memberId as memberId, title, date, memCount, dueDate, content, curCount, url from board, member 
+  	where  member.memberId = board.memberId and categoryId = #{categoryId} order by boardId desc, date desc
+	limit #{pageStart}, #{perPageNum} ]]>
+	</select>
+	
+	<select id ="countPaging" resultType="int">
+	<![CDATA[
+	select count(boardId) from board
+	where categoryId = #{categoryId} ]]>
+	</select> 
+	
+	<select id ="memberList" resultType="org.teamup.domain.MemberVO">
+    <![CDATA[
+  select member.memberId as memberId ,prtcmember.boardId as boardId, member.name as name , member.email as email from member, board, prtcmember where board.boardId = #{boardId} and board.boardId = prtcmember.boardId and prtcmember.memberId = member.memberId]]>
+    </select>
+    
+    <sql id="search">
+ <if test="searchType != null" > 
+   <if test="searchType == 't'.toString()">
+     and title like CONCAT('%', #{keyword}, '%')
+   </if>       
+ </if>  
+</sql>
+
+<select id="listSearch" resultType="org.teamup.domain.BoardVO">
+<![CDATA[  
+  select boardId, member.name as name,categoryId, board.memberId as memberId, title, date, memCount, dueDate, content, curCount, url from board, member 
+  	where  member.memberId = board.memberId and categoryId = #{categoryId} 
+]]>  
+
+  <include refid="search"></include>
+  
+<![CDATA[    
+  order by boardId desc
+  limit #{pageStart}, #{perPageNum}
+]]>  
+</select>
+
+<select id="listSearchCount" resultType="int">
+<![CDATA[  
+  select count(boardId) from board
+	where categoryId = #{categoryId}
+]]>
+  <include refid="search"></include>
+ 
+</select>  
+</mapper>
